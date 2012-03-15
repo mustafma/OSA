@@ -8,6 +8,7 @@ public class OSAActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        dsds
         setContentView(R.layout.main);
     }
 }
