@@ -1,7 +1,10 @@
 package com.osa.smoothing;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -22,16 +25,19 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Toast;
 
 
 public class OSAActivity extends Activity {
 
 	private static final int ACTION_TAKE_PHOTO_B = 1;
-	private static final int ACTION_TAKE_PHOTO_S = 2;
 	
 	private static final String BITMAP_STORAGE_KEY = "viewbitmap";
 	private static final String IMAGEVIEW_VISIBILITY_STORAGE_KEY = "imageviewvisibility";
 	private ImageView mImageView;
+	private RadioGroup mRadioGroupMode;
 	private Bitmap mImageBitmap;
 
 	private String mCurrentPhotoPath;
@@ -94,33 +100,45 @@ public class OSAActivity extends Activity {
 		/* So pre-scale the target bitmap into which the file is decoded */
 
 		/* Get the size of the ImageView */
-		int targetW = mImageView.getWidth();
+	/*	int targetW = mImageView.getWidth();
 		int targetH = mImageView.getHeight();
-
+*/
 		/* Get the size of the image */
-		BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+/*		BitmapFactory.Options bmOptions = new BitmapFactory.Options();
 		bmOptions.inJustDecodeBounds = true;
 		BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
 		int photoW = bmOptions.outWidth;
 		int photoH = bmOptions.outHeight;
-		
+	*/	
 		/* Figure out which way needs to be reduced less */
-		int scaleFactor = 1;
+/*		int scaleFactor = 1;
 		if ((targetW > 0) || (targetH > 0)) {
 			scaleFactor = Math.min(photoW/targetW, photoH/targetH);	
 		}
-
+*/
 		/* Set bitmap options to scale the image decode target */
-		bmOptions.inJustDecodeBounds = false;
+	/*	bmOptions.inJustDecodeBounds = false;
 		bmOptions.inSampleSize = scaleFactor;
 		bmOptions.inPurgeable = true;
-
+*/
 		/* Decode the JPEG file into a Bitmap */
-		Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+		Bitmap src = BitmapFactory.decodeFile(mCurrentPhotoPath);
+		MedianFilter median =new MedianFilter();
+		Bitmap dst = median.filter(src);
+		OutputStream fOut = null;
 		
+		File file = new File(getAlbumDir().getPath(), "FitnessGirl.jpg");
+		try {
+			fOut = new FileOutputStream(file);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		dst.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
 		/* Associate the Bitmap to the ImageView */
-		mImageView.setImageBitmap(bitmap);
-		mImageView.setVisibility(View.VISIBLE);
+//		mImageView.setImageBitmap(bitmap);
+	//	mImageView.setVisibility(View.VISIBLE);
 	}
 
 	private void galleryAddPic() {
@@ -156,22 +174,24 @@ public class OSAActivity extends Activity {
 
 		startActivityForResult(takePictureIntent, actionCode);
 	}
-
-	private void handleSmallCameraPhoto(Intent intent) {
-		Bundle extras = intent.getExtras();
-		mImageBitmap = (Bitmap) extras.get("data");
-		mImageView.setImageBitmap(mImageBitmap);
-		mImageView.setVisibility(View.VISIBLE);
-	}
-
-	private void handleBigCameraPhoto() {
+	/**
+	 * 
+	 */
+	private void handleImageLocally() {
 
 		if (mCurrentPhotoPath != null) {
-			setPic();
+			setPic();	
 			galleryAddPic();
 			mCurrentPhotoPath = null;
 		}
 
+	}
+	
+	/**
+	 * 
+	 */
+	private void handleImageServer() {
+		
 	}
 
 	
@@ -183,12 +203,6 @@ public class OSAActivity extends Activity {
 		}
 	};
 
-	Button.OnClickListener mTakePicSOnClickListener = 
-		new Button.OnClickListener() {
-		public void onClick(View v) {
-			dispatchTakePictureIntent(ACTION_TAKE_PHOTO_S);
-		}
-	};
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -196,7 +210,6 @@ public class OSAActivity extends Activity {
 		setContentView(R.layout.main);
 
 		mImageView = (ImageView) findViewById(R.id.imageView1);
-		
 		mImageBitmap = null;
 
 		Button picBtn = (Button) findViewById(R.id.button1);
@@ -218,17 +231,21 @@ public class OSAActivity extends Activity {
 		switch (requestCode) {
 		case ACTION_TAKE_PHOTO_B: {
 			if (resultCode == RESULT_OK) {
-				handleBigCameraPhoto();
+				RadioButton localRadio = (RadioButton) findViewById(R.id.radioButton_locally);
+				RadioButton serverRadio = (RadioButton) findViewById(R.id.radioButton_server);
+				if(localRadio.isChecked()) {
+					handleImageLocally();
+				}
+				else {
+					handleImageServer();
+				}
+				// add picture to gallery
+				
 			}
+			Toast.makeText(OSAActivity.this,"Image smoothed successfully! ",
+				     Toast.LENGTH_LONG).show();
 			break;
 		} // ACTION_TAKE_PHOTO_B
-
-		case ACTION_TAKE_PHOTO_S: {
-			if (resultCode == RESULT_OK) {
-				handleSmallCameraPhoto(data);
-			}
-			break;
-		} // ACTION_TAKE_PHOTO_S
 		} // switch
 	}
 
@@ -244,11 +261,11 @@ public class OSAActivity extends Activity {
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		mImageBitmap = savedInstanceState.getParcelable(BITMAP_STORAGE_KEY);
-		mImageView.setImageBitmap(mImageBitmap);
+	/*	mImageView.setImageBitmap(mImageBitmap);
 		mImageView.setVisibility(
 				savedInstanceState.getBoolean(IMAGEVIEW_VISIBILITY_STORAGE_KEY) ? 
 						ImageView.VISIBLE : ImageView.INVISIBLE
-		);
+		);*/
 	}
 
 	/**

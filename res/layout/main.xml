@@ -5,19 +5,19 @@
     android:orientation="vertical" >
 
     <RadioGroup
-        android:id="@+id/radioGroup1"
+        android:id="@+id/radioGroup_mode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" >
 
         <RadioButton
-            android:id="@+id/smooth_locally"
+            android:id="@+id/radioButton_locally"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
             android:text="@string/smooth_device" />
 
         <RadioButton
-            android:id="@+id/smooth_server"
+            android:id="@+id/radioButton_server"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/smooth_server" />
