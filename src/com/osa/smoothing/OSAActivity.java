@@ -17,6 +17,7 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,6 +25,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -94,7 +96,7 @@ public class OSAActivity extends Activity {
 		return f;
 	}
 
-	private void setPic() {
+	private boolean setPic() {
 
 		/* There isn't enough memory to open up more than a couple camera photos */
 		/* So pre-scale the target bitmap into which the file is decoded */
@@ -123,19 +125,25 @@ public class OSAActivity extends Activity {
 */
 		/* Decode the JPEG file into a Bitmap */
 		Bitmap src = BitmapFactory.decodeFile(mCurrentPhotoPath);
+		if(src == null)
+			return false;
 		MedianFilter median =new MedianFilter();
 		Bitmap dst = median.filter(src);
 		OutputStream fOut = null;
 		
-		File file = new File(getAlbumDir().getPath(), "FitnessGirl.jpg");
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		File file = new File(getAlbumDir().getPath(), 
+				 JPEG_FILE_PREFIX + timeStamp + "_smoothed" + JPEG_FILE_SUFFIX);
 		try {
 			fOut = new FileOutputStream(file);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
 
-		dst.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+		if(!dst.compress(Bitmap.CompressFormat.JPEG, 100, fOut))
+			return false;
+		return true;
 		/* Associate the Bitmap to the ImageView */
 //		mImageView.setImageBitmap(bitmap);
 	//	mImageView.setVisibility(View.VISIBLE);
@@ -177,25 +185,39 @@ public class OSAActivity extends Activity {
 	/**
 	 * 
 	 */
-	private void handleImageLocally() {
+	private boolean handleImageLocally() {
 
 		if (mCurrentPhotoPath != null) {
-			setPic();	
+			if(!setPic()) {
+				mCurrentPhotoPath = null;
+				return false;
+			}
 			galleryAddPic();
 			mCurrentPhotoPath = null;
+		
 		}
+		return true;
 
 	}
 	
 	/**
 	 * 
 	 */
-	private void handleImageServer() {
+	private boolean handleImageServer() {
+		return false;
 		
 	}
-
 	
 
+	 RadioButton.OnClickListener optionCLickListener =
+			 new RadioButton.OnClickListener(){
+			  public void onClick(View v) {
+				  EditText edit_text = (EditText)findViewById(R.id.editText_server);
+				  RadioButton radioButon_server = (RadioButton)findViewById(R.id.radioButton_server);
+				  edit_text.setEnabled(radioButon_server.isChecked());
+			  }	  
+			  
+	 };	
 	Button.OnClickListener mTakePicOnClickListener = 
 		new Button.OnClickListener() {
 		public void onClick(View v) {
@@ -211,7 +233,13 @@ public class OSAActivity extends Activity {
 
 		mImageView = (ImageView) findViewById(R.id.imageView1);
 		mImageBitmap = null;
-
+		 
+		EditText edit_text = (EditText)findViewById(R.id.editText_server);
+		edit_text.setEnabled(false);
+		RadioButton localRadio = (RadioButton) findViewById(R.id.radioButton_locally);
+		RadioButton serverRadio = (RadioButton) findViewById(R.id.radioButton_server);
+		localRadio.setOnClickListener(optionCLickListener);
+		serverRadio.setOnClickListener(optionCLickListener);
 		Button picBtn = (Button) findViewById(R.id.button1);
 		setBtnListenerOrDisable( 
 				picBtn, 
@@ -228,25 +256,40 @@ public class OSAActivity extends Activity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		boolean status = true;
 		switch (requestCode) {
 		case ACTION_TAKE_PHOTO_B: {
 			if (resultCode == RESULT_OK) {
 				RadioButton localRadio = (RadioButton) findViewById(R.id.radioButton_locally);
 				RadioButton serverRadio = (RadioButton) findViewById(R.id.radioButton_server);
+				
 				if(localRadio.isChecked()) {
-					handleImageLocally();
+					status = handleImageLocally();
 				}
-				else {
-					handleImageServer();
+				else if(serverRadio.isChecked()){
+					// get server address 
+					EditText edit_text = (EditText)findViewById(R.id.editText_server);
+					if(edit_text.getText().equals("")) {
+						Toast.makeText(OSAActivity.this,"server url is empty ",
+							     Toast.LENGTH_LONG).show();
+						return;
+					}
+					status = handleImageServer();
 				}
-				// add picture to gallery
+				
 				
 			}
-			Toast.makeText(OSAActivity.this,"Image smoothed successfully! ",
-				     Toast.LENGTH_LONG).show();
+
 			break;
 		} // ACTION_TAKE_PHOTO_B
 		} // switch
+		if(status){
+		Toast.makeText(OSAActivity.this,"Image smoothed successfully! ",
+			     Toast.LENGTH_LONG).show();
+		} else {
+			Toast.makeText(OSAActivity.this,"Failed! ",
+				     Toast.LENGTH_LONG).show();			
+		}
 	}
 
 	// Some lifecycle callbacks so that the image can survive orientation change
@@ -289,6 +332,8 @@ public class OSAActivity extends Activity {
 					PackageManager.MATCH_DEFAULT_ONLY);
 		return list.size() > 0;
 	}
+	
+	
 
 	private void setBtnListenerOrDisable( 
 			Button btn, 
@@ -304,4 +349,15 @@ public class OSAActivity extends Activity {
 		}
 	}
 
+}
+
+class UploadDownloadSmoothed extends AsyncTask<String, Void, Bitmap> {
+    protected Bitmap doInBackground(String... urls) {
+    	
+        return null;
+    }
+
+
+    protected void onPostExecute(Bitmap result) {
+    }
 }

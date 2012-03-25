@@ -24,10 +24,10 @@
     </RadioGroup>
 
     <EditText
-        android:id="@+id/editText1"
+        android:id="@+id/editText_server"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/server_url" />
+        android:text="@string/server_url"/>
 
     <Button
         android:id="@+id/button1"

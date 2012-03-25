@@ -15,7 +15,7 @@ public final class R {
     }
     public static final class id {
         public static final int button1=0x7f050004;
-        public static final int editText1=0x7f050003;
+        public static final int editText_server=0x7f050003;
         public static final int imageView1=0x7f050005;
         public static final int radioButton_locally=0x7f050001;
         public static final int radioButton_server=0x7f050002;
