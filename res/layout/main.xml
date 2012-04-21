@@ -35,10 +35,4 @@
         android:layout_height="wrap_content"
         android:text="@string/button_capture_image" />
 
-    <ImageView
-        android:id="@+id/imageView1"
-        android:layout_width="74dp"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_menu_camera" />
-
 </LinearLayout>

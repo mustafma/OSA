@@ -5,7 +5,7 @@
     <string name="app_name">OSA</string>
     <string name="smooth_server">smooth on server</string>
     <string name="smooth_device">smooth on device</string>
-    <string name="server_url">localhost</string>
+    <string name="server_url">http://dmms-lab42.ifi.uio.no:8080/imagealter/imagealter</string>
     <string name="button_capture_image">Camera</string>
     
 
